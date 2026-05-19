@@ -1,9 +1,9 @@
 <?php
 session_start();
-require 'koneksi.php';
+require 'config/koneksi.php';
 
 if (!empty($_SESSION['id_user'])) {
-  header('Location: dashboard.php');
+  header('Location: pages/dashboard/dashboard.php');
   exit;
 }
 
@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $_SESSION['id_divisi'] = $user['id_divisi'];
       $_SESSION['nama_divisi'] = $user['nama_divisi'];
 
-      header('Location: dashboard.php');
+      header('Location: pages/dashboard/dashboard.php');
       exit;
     }
 
@@ -75,7 +75,7 @@ if (isset($_GET['pesan']) && $_GET['pesan'] === 'login') {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login WeebeMart</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="/tugaspratikum/assets/style.css">
 </head>
 <body>
   <main class="login-page login-front">
