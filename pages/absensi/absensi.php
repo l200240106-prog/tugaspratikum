@@ -1,7 +1,9 @@
 <?php
-require 'koneksi.php';
-require 'auth.php';
+require '../../config/koneksi.php';
+/** @var mysqli $koneksi */
+require '../auth/auth.php';
 
+$showAbsensiForm = true;
 $pesan = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -28,7 +30,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $tanggalFilter = $_GET['tanggal'] ?? date('Y-m-d');
-$karyawanList = mysqli_query($koneksi, "SELECT id_karyawan, nama FROM karyawan ORDER BY nama");
+
+if (isAdmin()) {
+  $karyawanList = mysqli_query($koneksi, "SELECT id_karyawan, nama FROM karyawan ORDER BY nama");
+} else {
+  $idDivisiLogin = (int) ($_SESSION['id_divisi'] ?? 0);
+  $karyawanList = mysqli_query(
+    $koneksi,
+    "SELECT id_karyawan, nama FROM karyawan WHERE id_divisi = $idDivisiLogin ORDER BY nama"
+  );
+}
 
 $summaryStmt = mysqli_prepare(
   $koneksi,
@@ -44,11 +55,11 @@ while ($row = mysqli_fetch_assoc($summaryResult)) {
 
 $logStmt = mysqli_prepare(
   $koneksi,
-  'SELECT absensi.*, karyawan.nama
-   FROM absensi
-   JOIN karyawan ON karyawan.id_karyawan = absensi.id_karyawan
-   WHERE absensi.tanggal_kehadiran = ?
-   ORDER BY absensi.id_absensi DESC'
+    'SELECT absensi.*, karyawan.nama
+    FROM absensi
+    JOIN karyawan ON karyawan.id_karyawan = absensi.id_karyawan
+    WHERE absensi.tanggal_kehadiran = ?
+    ORDER BY absensi.id_absensi DESC'
 );
 mysqli_stmt_bind_param($logStmt, 's', $tanggalFilter);
 mysqli_stmt_execute($logStmt);
@@ -60,21 +71,16 @@ $logAbsensi = mysqli_stmt_get_result($logStmt);
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Absensi Karyawan</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="/tugaspratikum/assets/style.css">
 </head>
 <body>
   <header class="site-header">
     <nav class="navbar">
-      <a class="brand" href="dashboard.php"><span class="brand-icon">WM</span><span>Weebe<span>Mart</span></span></a>
+      <a class="brand" href="/tugaspratikum/pages/dashboard/dashboard.php"><span class="brand-icon">WM</span><span>Weebe<span>Mart</span></span></a>
       <ul class="nav-links">
-        <li><a href="dashboard.php">Beranda</a></li>
-        <li><a href="karyawan.php">Karyawan</a></li>
-        <li><a class="active" href="absensi.php">Absensi</a></li>
-        <li><a href="komponen-gaji.php">Komponen</a></li>
-        <li><a href="gaji.php">Gaji</a></li>
-        <li><a href="laporan.php">Laporan</a></li>
+        <?= renderNavLinks('absensi'); ?>
       </ul>
-      <a class="nav-button" href="logout.php">Keluar</a>
+      <a class="nav-button" href="/tugaspratikum/pages/auth/logout.php">Keluar</a>
     </nav>
   </header>
 
@@ -98,6 +104,7 @@ $logAbsensi = mysqli_stmt_get_result($logStmt);
       <article class="summary-card"><span class="red-text"><?= e($summary['Alpha']); ?></span><p>Alpha</p></article>
     </section>
 
+    <?php if ($showAbsensiForm) : ?>
     <section class="content-card form-card" id="input-absensi">
       <div class="section-heading">
         <h2>Input Absensi</h2>
@@ -131,11 +138,14 @@ $logAbsensi = mysqli_stmt_get_result($logStmt);
         <button class="small-button form-submit" type="submit">Simpan Absensi</button>
       </form>
     </section>
+    <?php endif; ?>
 
     <section class="content-card">
       <div class="section-heading">
         <h2>Log Absensi</h2>
-        <a class="small-button" href="#input-absensi">+ Input Absensi</a>
+        <?php if ($showAbsensiForm) : ?>
+          <a class="small-button" href="#input-absensi">+ Input Absensi</a>
+        <?php endif; ?>
       </div>
       <div class="table-wrap">
         <table>

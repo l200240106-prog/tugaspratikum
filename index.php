@@ -1,57 +1,87 @@
 <?php
 session_start();
-require 'koneksi.php';
+require 'config/koneksi.php';
 
 if (!empty($_SESSION['id_user'])) {
-  header('Location: dashboard.php');
+  header('Location: pages/dashboard/dashboard.php');
   exit;
 }
 
 $pesan = '';
 $divisiLogin = [];
-$divisiResult = mysqli_query($koneksi, 'SELECT id_divisi, nama_divisi FROM divisi ORDER BY nama_divisi');
 
-while ($row = mysqli_fetch_assoc($divisiResult)) {
-  $slug = strtolower(preg_replace('/[^a-z0-9]+/i', '', $row['nama_divisi']));
-  $divisiLogin[] = [
-    'id_divisi' => (int) $row['id_divisi'],
-    'nama_divisi' => $row['nama_divisi'],
-    'slug' => $slug,
-    'email' => $slug . '@weebemart.com',
-    'password' => $slug . '123',
+function buildAdminUser(): array {
+  return [
+    'slug' => 'admin',
+    'nama_divisi' => 'Admin',
+    'email' => 'admin@weebemart.com',
+    'password' => 'admin123',
   ];
 }
+
+function loadDivisiLogin(mysqli $koneksi): array {
+  $divisiLogin = [];
+  $result = mysqli_query($koneksi, 'SELECT id_divisi, nama_divisi FROM divisi ORDER BY nama_divisi');
+
+  while ($row = mysqli_fetch_assoc($result)) {
+    $slug = strtolower(preg_replace('/[^a-z0-9]+/i', '', $row['nama_divisi']));
+
+    if ($slug === 'admin') {
+      continue;
+    }
+
+    $divisiLogin[] = [
+      'id_divisi' => (int) $row['id_divisi'],
+      'nama_divisi' => $row['nama_divisi'],
+      'slug' => $slug,
+      'email' => $slug . '@weebemart.com',
+      'password' => $slug . '123',
+    ];
+  }
+
+  return $divisiLogin;
+}
+
+function findDivisiUser(array $divisiLogin, int $idDivisi, string $email, string $password): ?array {
+  foreach ($divisiLogin as $divisi) {
+    if ($divisi['id_divisi'] === $idDivisi && $email === $divisi['email'] && $password === $divisi['password']) {
+      return $divisi;
+    }
+  }
+  return null;
+}
+
+function createSessionForUser(array $user): void {
+  $_SESSION['id_user'] = md5($user['email'] . time());
+  $_SESSION['nama'] = $user['nama_divisi'] . ' WeebeMart';
+  $_SESSION['email'] = $user['email'];
+  $_SESSION['role'] = $user['slug'];
+  $_SESSION['id_divisi'] = $user['id_divisi'] ?? 0;
+  $_SESSION['nama_divisi'] = $user['nama_divisi'];
+}
+
+$divisiLogin = loadDivisiLogin($koneksi);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $email = trim($_POST['email'] ?? '');
   $password = trim($_POST['password'] ?? '');
-  $id_divisi = (int) ($_POST['role'] ?? 0);
+  $roleInput = trim($_POST['role'] ?? '');
 
-  if ($email && $password && $id_divisi) {
+  if ($email && $password && $roleInput) {
+    $adminUser = buildAdminUser();
     $user = null;
 
-    foreach ($divisiLogin as $divisi) {
-      $passwordValid = $password === $divisi['password'];
-
-      if ($divisi['slug'] === 'keuangan' && $password === 'uang123') {
-        $passwordValid = true;
+    if ($roleInput === 'admin') {
+      if ($email === $adminUser['email'] && $password === $adminUser['password']) {
+        $user = $adminUser;
       }
-
-      if ($divisi['id_divisi'] === $id_divisi && $email === $divisi['email'] && $passwordValid) {
-        $user = $divisi;
-        break;
-      }
+    } else {
+      $user = findDivisiUser($divisiLogin, (int) $roleInput, $email, $password);
     }
 
     if ($user) {
-      $_SESSION['id_user'] = md5($email);
-      $_SESSION['nama'] = $user['nama_divisi'] . ' WeebeMart';
-      $_SESSION['email'] = $email;
-      $_SESSION['role'] = $user['slug'];
-      $_SESSION['id_divisi'] = $user['id_divisi'];
-      $_SESSION['nama_divisi'] = $user['nama_divisi'];
-
-      header('Location: dashboard.php');
+      createSessionForUser($user);
+      header('Location: pages/dashboard/dashboard.php');
       exit;
     }
 
@@ -75,7 +105,7 @@ if (isset($_GET['pesan']) && $_GET['pesan'] === 'login') {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login WeebeMart</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="/tugaspratikum/assets/style.css">
 </head>
 <body>
   <main class="login-page login-front">
@@ -110,7 +140,8 @@ if (isset($_GET['pesan']) && $_GET['pesan'] === 'login') {
       <form method="post" action="index.php">
         <label for="role">Masuk sebagai</label>
         <select id="role" name="role" required>
-          <option value="">Pilih divisi</option>
+          <option value="">Pilih peran</option>
+          <option value="admin">Admin</option>
           <?php foreach ($divisiLogin as $divisi) : ?>
             <option value="<?= e($divisi['id_divisi']); ?>"><?= e($divisi['nama_divisi']); ?></option>
           <?php endforeach; ?>

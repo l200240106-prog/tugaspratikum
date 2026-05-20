@@ -1,6 +1,8 @@
 <?php
-require 'koneksi.php';
-require 'auth.php';
+require '../../config/koneksi.php';
+/** @var mysqli $koneksi */
+require '../auth/auth.php';
+requireRole(['admin']);
 
 $pesan = '';
 
@@ -67,21 +69,16 @@ $karyawan = mysqli_query(
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Data Karyawan</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="/tugaspratikum/assets/style.css">
 </head>
 <body>
   <header class="site-header">
     <nav class="navbar">
-      <a class="brand" href="dashboard.php"><span class="brand-icon">WM</span><span>Weebe<span>Mart</span></span></a>
+      <a class="brand" href="/tugaspratikum/pages/dashboard/dashboard.php"><span class="brand-icon">WM</span><span>Weebe<span>Mart</span></span></a>
       <ul class="nav-links">
-        <li><a href="dashboard.php">Beranda</a></li>
-        <li><a class="active" href="karyawan.php">Karyawan</a></li>
-        <li><a href="absensi.php">Absensi</a></li>
-        <li><a href="komponen-gaji.php">Komponen</a></li>
-        <li><a href="gaji.php">Gaji</a></li>
-        <li><a href="laporan.php">Laporan</a></li>
+        <?= renderNavLinks('karyawan'); ?>
       </ul>
-      <a class="nav-button" href="logout.php">Keluar</a>
+      <a class="nav-button" href="/tugaspratikum/pages/auth/logout.php">Keluar</a>
     </nav>
   </header>
 
