@@ -93,9 +93,9 @@ if (isset($_GET['pesan']) && $_GET['pesan'] === 'login') {
       </p>
 
       <div class="login-benefits">
-        <article><span>01</span> Admin dapat mengelola data karyawan.</article>
-        <article><span>02</span> Keuangan dapat melihat data absensi dan gaji.</article>
-        <article><span>03</span> Akses cepat menuju dashboard WeebeMart.</article>
+        <article><span>01</span> Admin masuk ke panel kontrol semua modul.</article>
+        <article><span>02</span> Keuangan masuk ke panel gaji dan laporan.</article>
+        <article><span>03</span> Gudang dan operasional masuk ke panel divisinya.</article>
       </div>
     </section>
 

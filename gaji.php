@@ -1,6 +1,7 @@
 <?php
 require 'koneksi.php';
 require 'auth.php';
+require_roles(['admin', 'keuangan']);
 
 $pesan = '';
 
@@ -71,12 +72,7 @@ $gaji = mysqli_query(
     <nav class="navbar">
       <a class="brand" href="dashboard.php"><span class="brand-icon">WM</span><span>Weebe<span>Mart</span></span></a>
       <ul class="nav-links">
-        <li><a href="dashboard.php">Beranda</a></li>
-        <li><a href="karyawan.php">Karyawan</a></li>
-        <li><a href="absensi.php">Absensi</a></li>
-        <li><a href="komponen-gaji.php">Komponen</a></li>
-        <li><a class="active" href="gaji.php">Gaji</a></li>
-        <li><a href="laporan.php">Laporan</a></li>
+        <?php nav_items('gaji.php'); ?>
       </ul>
       <a class="nav-button" href="logout.php">Keluar</a>
     </nav>

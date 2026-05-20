@@ -567,6 +567,24 @@ footer {
   padding: 0 16px;
 }
 
+.muted-button {
+  background: #66728a;
+}
+
+.danger-button {
+  background: var(--red);
+}
+
+.table-actions {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.table-actions form {
+  margin: 0;
+}
+
 .table-wrap {
   margin-top: 20px;
   overflow-x: auto;
@@ -630,6 +648,81 @@ td {
 .orange-text { color: var(--orange); }
 .red-text { color: var(--red); }
 .blue-text { color: var(--blue); }
+
+.role-hero {
+  align-items: flex-end;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(24, 36, 67, 0.07);
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding: 30px;
+}
+
+.role-hero h1 {
+  font-size: clamp(30px, 3vw, 42px);
+  line-height: 1.18;
+  margin: 18px 0 10px;
+}
+
+.role-hero p:not(.eyebrow) {
+  color: var(--muted);
+  font-size: 18px;
+  max-width: 720px;
+}
+
+.role-pill {
+  border-radius: 999px;
+  color: var(--white);
+  flex: 0 0 auto;
+  font-weight: 800;
+  padding: 10px 18px;
+}
+
+.role-action-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(4, 1fr);
+  margin-bottom: 24px;
+}
+
+.finance-actions,
+.warehouse-actions,
+.operation-actions {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.role-action {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(24, 36, 67, 0.07);
+  display: grid;
+  gap: 6px;
+  min-height: 112px;
+  padding: 22px;
+}
+
+.role-action strong {
+  font-size: 18px;
+}
+
+.role-action span {
+  color: var(--muted);
+}
+
+.role-admin .role-hero { border-top: 5px solid var(--blue); }
+.role-finance .role-hero { border-top: 5px solid var(--green); }
+.role-warehouse .role-hero { border-top: 5px solid var(--orange); }
+.role-operation .role-hero { border-top: 5px solid var(--teal); }
+
+.role-admin .role-pill { background: var(--blue); }
+.role-finance .role-pill { background: var(--green); }
+.role-warehouse .role-pill { background: var(--orange); color: #3b2a03; }
+.role-operation .role-pill { background: var(--teal); }
 
 .feature-grid-page {
   grid-template-columns: repeat(4, 1fr);
@@ -909,9 +1002,19 @@ td {
   .preview-panels,
   .info-grid,
   .summary-grid,
+  .role-action-grid,
+  .finance-actions,
+  .warehouse-actions,
+  .operation-actions,
   .feature-grid,
   .feature-grid-page {
     grid-template-columns: 1fr;
+  }
+
+  .role-hero {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 24px;
   }
 
   .dashboard-preview {
