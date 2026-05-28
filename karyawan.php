@@ -24,6 +24,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
       $pesan = 'Nama divisi wajib diisi.';
     }
+  } elseif ($form === 'divisi_update') {
+    $id_divisi = (int) ($_POST['id_divisi'] ?? 0);
+    $nama_divisi = trim($_POST['nama_divisi'] ?? '');
+
+    if ($id_divisi && $nama_divisi) {
+      $stmt = mysqli_prepare($koneksi, 'UPDATE divisi SET nama_divisi = ? WHERE id_divisi = ?');
+      mysqli_stmt_bind_param($stmt, 'si', $nama_divisi, $id_divisi);
+
+      if (mysqli_stmt_execute($stmt)) {
+        header('Location: karyawan.php?status=divisi_diubah');
+        exit;
+      }
+
+      $pesan = 'Data divisi gagal diubah.';
+    } else {
+      $pesan = 'Pilih divisi dan isi nama divisi.';
+    }
+  } elseif ($form === 'divisi_delete') {
+    $id_divisi = (int) ($_POST['id_divisi'] ?? 0);
+
+    if ($id_divisi) {
+      $stmt = mysqli_prepare(
+        $koneksi,
+        'SELECT
+          (SELECT COUNT(*) FROM karyawan WHERE id_divisi = ?) AS total_karyawan,
+          (SELECT COUNT(*) FROM komponen_gaji WHERE id_divisi = ?) AS total_komponen'
+      );
+      mysqli_stmt_bind_param($stmt, 'ii', $id_divisi, $id_divisi);
+      mysqli_stmt_execute($stmt);
+      $relasi = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+      $totalKaryawan = (int) ($relasi['total_karyawan'] ?? 0);
+      $totalKomponen = (int) ($relasi['total_komponen'] ?? 0);
+
+      if ($totalKaryawan > 0 || $totalKomponen > 0) {
+        $pesan = 'Divisi tidak dapat dihapus karena masih digunakan oleh karyawan atau komponen gaji.';
+      } else {
+        $stmt = mysqli_prepare($koneksi, 'DELETE FROM divisi WHERE id_divisi = ?');
+        mysqli_stmt_bind_param($stmt, 'i', $id_divisi);
+
+        if (mysqli_stmt_execute($stmt)) {
+          header('Location: karyawan.php?status=divisi_dihapus');
+          exit;
+        }
+
+        $pesan = 'Data divisi gagal dihapus.';
+      }
+    } else {
+      $pesan = 'Pilih divisi yang ingin dihapus.';
+    }
   }
 
   $nama = trim($_POST['nama'] ?? '');
@@ -50,6 +99,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   } elseif (!$pesan && $form === 'karyawan') {
     $pesan = 'Lengkapi nama, divisi, jabatan, dan tanggal masuk.';
   }
+}
+
+$editDivisi = null;
+if (isset($_GET['edit_divisi'])) {
+  $idEditDivisi = (int) $_GET['edit_divisi'];
+  $stmt = mysqli_prepare($koneksi, 'SELECT * FROM divisi WHERE id_divisi = ? LIMIT 1');
+  mysqli_stmt_bind_param($stmt, 'i', $idEditDivisi);
+  mysqli_stmt_execute($stmt);
+  $editDivisi = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
 }
 
 $divisi = mysqli_query($koneksi, 'SELECT * FROM divisi ORDER BY nama_divisi');
@@ -92,21 +150,31 @@ $karyawan = mysqli_query(
       <div class="notice success">Data karyawan berhasil ditambahkan.</div>
     <?php elseif (isset($_GET['status']) && $_GET['status'] === 'divisi') : ?>
       <div class="notice success">Data divisi berhasil ditambahkan.</div>
+    <?php elseif (isset($_GET['status']) && $_GET['status'] === 'divisi_diubah') : ?>
+      <div class="notice success">Data divisi berhasil diubah.</div>
+    <?php elseif (isset($_GET['status']) && $_GET['status'] === 'divisi_dihapus') : ?>
+      <div class="notice success">Data divisi berhasil dihapus.</div>
     <?php elseif ($pesan) : ?>
       <div class="notice danger"><?= e($pesan); ?></div>
     <?php endif; ?>
 
     <section class="content-card form-card" id="tambah-divisi">
       <div class="section-heading">
-        <h2>Tambah Divisi</h2>
+        <h2><?= $editDivisi ? 'Edit Divisi' : 'Tambah Divisi'; ?></h2>
+        <?php if ($editDivisi) : ?>
+          <a class="small-button muted-button" href="karyawan.php#tambah-divisi">Batal Edit</a>
+        <?php endif; ?>
       </div>
 
       <form class="data-form" method="post" action="karyawan.php">
-        <input type="hidden" name="form" value="divisi">
+        <input type="hidden" name="form" value="<?= $editDivisi ? 'divisi_update' : 'divisi'; ?>">
+        <?php if ($editDivisi) : ?>
+          <input type="hidden" name="id_divisi" value="<?= e($editDivisi['id_divisi']); ?>">
+        <?php endif; ?>
         <label>Nama Divisi
-          <input name="nama_divisi" type="text" placeholder="Contoh: Operasional" required>
+          <input name="nama_divisi" type="text" value="<?= e($editDivisi['nama_divisi'] ?? ''); ?>" placeholder="Contoh: Operasional" required>
         </label>
-        <button class="small-button form-submit" type="submit">Simpan Divisi</button>
+        <button class="small-button form-submit" type="submit"><?= $editDivisi ? 'Update Divisi' : 'Simpan Divisi'; ?></button>
       </form>
     </section>
 
@@ -159,13 +227,23 @@ $karyawan = mysqli_query(
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>ID Divisi</th><th>Nama Divisi</th></tr>
+            <tr><th>ID Divisi</th><th>Nama Divisi</th><th>Aksi</th></tr>
           </thead>
           <tbody>
             <?php while ($row = mysqli_fetch_assoc($daftarDivisi)) : ?>
               <tr>
                 <td><?= e($row['id_divisi']); ?></td>
                 <td><?= e($row['nama_divisi']); ?></td>
+                <td>
+                  <div class="table-actions">
+                    <a class="small-button muted-button" href="karyawan.php?edit_divisi=<?= e($row['id_divisi']); ?>#tambah-divisi">Edit</a>
+                    <form method="post" action="karyawan.php" onsubmit="return confirm('Hapus divisi ini?');">
+                      <input type="hidden" name="form" value="divisi_delete">
+                      <input type="hidden" name="id_divisi" value="<?= e($row['id_divisi']); ?>">
+                      <button class="small-button danger-button" type="submit">Hapus</button>
+                    </form>
+                  </div>
+                </td>
               </tr>
             <?php endwhile; ?>
           </tbody>

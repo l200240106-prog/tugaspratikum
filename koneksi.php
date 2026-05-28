@@ -1,10 +1,10 @@
 <?php
 date_default_timezone_set('Asia/Makassar');
 
-$host = 'localhost';
-$user = 'root';
-$pass = '';
-$db = 'sistem_penggajian';
+$host = 'sql200.infinityfree.com';
+$user = 'if0_41988589';
+$pass = 'lDEgsGfcNj4F';
+$db = 'if0_41988589_absenkaryawan';
 
 $koneksi = mysqli_connect($host, $user, $pass, $db);
 
